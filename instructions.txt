@@ -1,0 +1,43 @@
+How to Run Ocean Intelligence Locally
+Here is a summary of the local installation steps detailed in your new README.md:
+1. Prerequisites
+Ensure you have Node.js (v18+) installed on your system. You can also run the project using Bun if preferred.
+2. Install Dependencies
+Navigate to the extracted workspace directory and install all required client-side and server-side packages:
+code
+Bash
+# Using npm
+npm install
+
+# Or using Bun
+bun install
+3. Configure the Gemini API Key
+The application utilizes Google Gemini server-side to provide dynamic insights, report generation, and conversational analysis through the Scientific Copilot.
+Copy the .env.example file to create a .env configuration file:
+code
+Bash
+cp .env.example .env
+Open the new .env file and insert your API key:
+code
+Env
+GEMINI_API_KEY=your_actual_gemini_api_key_here
+(You can obtain a free developer key at Google AI Studio)
+4. Launch the Local Development Server
+Run the dev task to start the Express server and Vite bundler synchronously:
+code
+Bash
+# Using npm
+npm run dev
+
+# Or using Bun
+bun run dev
+Once launched, open your browser and navigate to http://localhost:3000 to interact with the simulated floats, the timeline forecast slider, and the responsive copilot workflow!
+5. Compiling for Production
+To test production optimization, bundle the static assets and bundle the Express server using:
+code
+Bash
+# Compile and optimize assets and server
+npm run build
+
+# Start the production bundle
+npm run start

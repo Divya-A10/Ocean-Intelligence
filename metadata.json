@@ -1,0 +1,6 @@
+{
+  "name": "Ocean Intelligence",
+  "description": "Ocean Intelligence is an AI-powered environmental platform designed to help researchers, governments, conservation organizations, NGOs, and companies understand, predict, and protect marine ecosystems.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
