@@ -1,291 +1,135 @@
-# Ocean Intelligence
+# Ocean Intelligence - Backend Architecture
 
-> **Understanding the Ocean Through Data, Simulation, and AI.**
+**Ocean Intelligence** is an interactive scientific platform designed for marine researchers studying ocean plastic drift, hydrodynamic currents, bioaccumulation, and environmental risks.
 
-Ocean Intelligence is an AI-powered research platform that helps scientists, governments, NGOs, and conservation organizations monitor and forecast marine microplastic transport using Earth observation, ocean circulation data, particle transport simulation, and generative AI.
-
-Instead of static dashboards, Ocean Intelligence provides an interactive map where users can visualize how microplastics move through the ocean over time, identify accumulation hotspots, and understand the environmental factors driving those predictions.
+This repository contains the production-grade **FastAPI backend foundation**, engineered with clean layered architecture (Routes -> Services -> Models & Schemas) for maximum maintainability, scalability, and seamless integration of future scientific simulation engines.
 
 ---
 
-## Vision
+## 🏗️ Architecture & Project Structure
 
-Our oceans generate enormous amounts of environmental data every day, yet understanding how pollution moves remains difficult.
-
-Ocean Intelligence transforms satellite imagery, ocean current data, weather observations, and scientific simulations into an intuitive platform for exploring marine plastic transport and supporting environmental decision-making.
-
----
-
-## Features
-
-### Interactive Ocean Map
-
-- Interactive global ocean map
-- Satellite imagery
-- Ocean current visualization
-- Forecast timeline
-- Region selection
-- Zoom & pan
-
----
-
-### Particle Transport Simulation
-
-Powered by **Parcels**, the platform simulates the movement of floating microplastic particles using real ocean current data.
-
-Features include:
-
-- Animated particle trajectories
-- Forecast playback
-- Transport pathways
-- Coastline accumulation
-- Hotspot visualization
-
----
-
-### Ocean Intelligence
-
-Analyze predicted plastic transport through:
-
-- Hotspot detection
-- Risk assessment
-- Transport velocity
-- Accumulation estimates
-- Forecast confidence
-- Environmental summaries
-
----
-
-### Scientific Copilot
-
-Built with Google Gemini.
-
-The Scientific Copilot can:
-
-- Explain forecasts
-- Summarize environmental conditions
-- Answer research questions
-- Generate reports
-- Interpret model outputs
-
----
-
-### Report Generation
-
-Generate downloadable scientific reports containing:
-
-- Forecast summary
-- Risk assessment
-- Particle transport analysis
-- Environmental observations
-- AI-generated insights
-
----
-
-# Architecture
-
-```
-Earth Observation Data
-(Satellite • Weather • Ocean Currents)
-                │
-                ▼
-      Environmental Data Pipeline
-                │
-                ▼
-     Parcels Particle Simulation
-                │
-                ▼
-      Ocean Intelligence Engine
-                │
-                ▼
- Hotspots • Risk • Forecast Metrics
-                │
-                ▼
-      Gemini Scientific Copilot
-                │
-                ▼
-      Interactive Research Dashboard
+```text
+backend/
+└── app/
+    ├── main.py                  # FastAPI application entry point & CORS configuration
+    ├── config/
+    │   ├── __init__.py
+    │   └── settings.py          # Central Pydantic settings & environment variables
+    ├── api/
+    │   └── routes/              # HTTP Route Handlers (Controller layer)
+    │       ├── __init__.py
+    │       ├── health.py        # System health & root project status
+    │       ├── simulation.py    # Microplastic drift simulation endpoint
+    │       ├── currents.py      # Hydrodynamic current vectors endpoint
+    │       ├── hotspots.py      # Accumulation density hotspots endpoint
+    │       ├── explain.py       # AI Copilot scientific inquiry endpoint
+    │       └── reports.py       # Automated research briefing generation endpoint
+    ├── services/                # Business logic & scientific integration layer
+    │   ├── __init__.py
+    │   ├── simulation_service.py
+    │   ├── current_service.py
+    │   ├── hotspot_service.py
+    │   ├── gemini_service.py
+    │   └── report_service.py
+    ├── models/                  # Internal domain entities & dataclasses
+    │   ├── __init__.py
+    │   ├── simulation.py
+    │   ├── current.py
+    │   ├── hotspot.py
+    │   └── report.py
+    ├── schemas/                 # Pydantic schemas for request/response validation
+    │   ├── __init__.py
+    │   ├── simulation_schema.py
+    │   ├── current_schema.py
+    │   ├── hotspot_schema.py
+    │   ├── explain_schema.py
+    │   └── report_schema.py
+    ├── utils/                   # Shared logging & helper utilities
+    │   ├── __init__.py
+    │   └── logger.py
+    └── data/                    # Static / fallback placeholder datasets
+        ├── __init__.py
+        └── placeholders.py
 ```
 
 ---
 
-# Data Sources
-
-Ocean Intelligence is designed to integrate publicly available Earth observation datasets.
-
-Examples include:
-
-- Sentinel-2
-- Copernicus Marine Service (CMEMS)
-- HYCOM
-- ROMS
-- NOAA
-- ERA5 Weather
-- GBIF
-- OBIS
-- AIS Shipping Data
-
----
-
-# Tech Stack
-
-## Frontend
-
-- Next.js (MVP currently built using React + Vite + TypeScript)
-- React
-- TypeScript
-- Tailwind CSS
-- Framer Motion
-- Three.js
-
----
-
-## Backend
-
-- FastAPI / Express.js (Express server in MVP for unified hosting and API proxies)
-- Node.js
-
----
-
-## Scientific Computing
-
-- Parcels
-- NumPy
-- Pandas
-- Xarray
-- NetCDF
-
----
-
-## AI
-
-- Google Gemini (`@google/genai` TypeScript SDK)
-
----
-
-# Local Development & Installation
-
-Follow these steps to run the Ocean Intelligence MVP on your local system.
+## ⚙️ Installation & Setup
 
 ### Prerequisites
 
-Make sure you have [Node.js](https://nodejs.org/) (version 18 or higher) installed. You can also use [Bun](https://bun.sh/) if preferred (a `bun.lock` is included).
+- **Python**: 3.12 or higher
+- **Virtual Environment**: `venv` or `conda`
 
-### 1. Clone & Extract
-Extract the project files to a local directory of your choice and open your terminal there.
+### 1. Environment Setup
+
+Clone the repository and set up your Python virtual environment:
+
+```bash
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
 
 ### 2. Install Dependencies
-Run one of the following commands in the root directory to install all required client-side and server-side packages:
+
+Install all required packages from `requirements.txt`:
 
 ```bash
-# Using npm (recommended)
-npm install
-
-# Or using Bun
-bun install
+pip install -r requirements.txt
 ```
 
-### 3. Configure Environment Variables
-The application communicates with Google Gemini API server-side to provide intelligent scientific copilot summaries and reports.
+### 3. Environment Configuration
 
-1. Copy the template `.env.example` file to create your active `.env` file:
-   ```bash
-   cp .env.example .env
-   ```
-2. Open `.env` and fill in your Google Gemini API Key:
-   ```env
-   GEMINI_API_KEY=your_actual_gemini_api_key_here
-   ```
-   *You can generate a free developer API key from the [Google AI Studio Console](https://aistudio.google.com/).*
-
-### 4. Run the Development Server
-Launch the unified local development server running both Vite asset streaming and the Express proxy endpoint:
+Copy `.env.example` to create your local `.env` file:
 
 ```bash
-# Using npm
-npm run dev
-
-# Or using Bun
-bun run dev
+cp .env.example .env
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your web browser to interact with the platform.
+---
 
-### 5. Production Build & Start
-To test the production optimized build compiled into optimized JavaScript assets and compiled server bundles:
+## 🚀 Running the Application
+
+Start the development server using `uvicorn`:
 
 ```bash
-# Build the production bundle
-npm run build
-
-# Start the optimized server
-npm run start
+uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000
 ```
-This builds static assets into the `dist` directory and bundles the Express server using `esbuild` to run optimized server routines.
+
+Alternatively, run directly via Python:
+
+```bash
+python3 -m backend.app.main
+```
+
+Once running, interactive API documentation is automatically accessible at:
+
+- **Swagger UI**: [http://localhost:8000/docs](http://localhost:8000/docs)
+- **ReDoc**: [http://localhost:8000/redoc](http://localhost:8000/redoc)
+- **OpenAPI Spec**: [http://localhost:8000/openapi.json](http://localhost:8000/openapi.json)
 
 ---
 
-# MVP Roadmap
+## 📡 Available API Endpoints
 
-## Phase 1
-
-- Interactive Ocean Dashboard
-- Ocean Map
-- Region Selection
-
----
-
-## Phase 2
-
-- Ocean Current Visualization
-- Parcels Integration
-- Particle Transport Animation
-- Forecast Timeline
+| Method | Endpoint | Description | Sample Response Payload |
+| :--- | :--- | :--- | :--- |
+| **GET** | `/` | Root project status | `{"project": "Ocean Intelligence", "status": "running", "version": "0.1.0"}` |
+| **GET** | `/health` | Liveness health check | `{"status": "healthy"}` |
+| **GET** | `/simulation` | Microplastic particle drift forecast | `{"forecast_time": "2026-07-23T12:00:00Z", "region": "Bay of Bengal", "particles": [], "currents": [], "hotspots": [], "metrics": {"risk": "Unknown", "confidence": 0}}` |
+| **GET** | `/currents` | Ocean velocity vector grid | `{"region": "Bay of Bengal", "vectors": [{"latitude": 15.0, "longitude": 88.0, "u_component": 0.42, "v_component": 0.18, "velocity_knots": 2.4}]}` |
+| **GET** | `/hotspots` | Density accumulation hotspots | `{"region": "Bay of Bengal", "count": 2, "hotspots": [{"id": "hotspot-001", "latitude": 15.8, "longitude": 87.5, "density_particles_per_km2": 2850.5, "risk_level": "High"}]}` |
+| **POST** | `/explain` | AI Copilot research explanation | Accept: `{"question": "..."}` <br> Return: `{"answer": "Placeholder explanation."}` |
+| **POST** | `/report` | Scientific briefing generation | Accept: `{}` or simulation data <br> Return: `{"report_id": "demo-report", "status": "generated"}` |
 
 ---
 
-## Phase 3
+## 🔬 Scientific Integration Roadmap (Planned)
 
-- Dynamic Metrics
-- Plastic Hotspots
-- Risk Assessment
-- Report Generation
+The backend service layer is designed for easy extension. Placeholder services include clear `# TODO:` hooks for upcoming modules:
 
----
-
-## Phase 4
-
-- Gemini Scientific Copilot
-- Natural Language Queries
-- AI Report Generation
-
----
-
-# Future Work
-
-Ocean Intelligence is designed as a modular platform.
-
-Future research modules include:
-
-- Coral Intelligence
-- Fisheries Intelligence
-- Marine Biodiversity
-- Oil Spill Monitoring
-- Harmful Algal Bloom Forecasting
-- Coastal Resilience
-
----
-
-# MVP
-
-The MVP demonstrates:
-
-- Interactive ocean visualization
-- Particle transport simulation
-- Forecast timeline
-- Dynamic environmental metrics
-- AI-powered scientific explanations
-
----
-
-Contributions, ideas, and scientific collaborations are welcome.
+1. **Copernicus Marine (CMEMS)**: Direct fetching of physical oceanography reanalysis & forecast models.
+2. **HYCOM**: Global high-resolution ocean current velocity fields.
+3. **Parcels (OceanParcels)**: Eulerian-Lagrangian fluid flow particle tracking simulations.
+4. **Google Gemini AI**: Grounded copilot analysis referencing peer-reviewed literature.
+5. **PDF / Report Engine**: Automated research report compilation via Jinja2 & WeasyPrint.
