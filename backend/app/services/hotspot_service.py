@@ -1,32 +1,39 @@
 from typing import Optional
 from backend.app.schemas.hotspot_schema import HotspotsResponse, HotspotSchema
-from backend.app.data.placeholders import PLACEHOLDER_HOTSPOTS
+from backend.app.engine.ocean_engine import ocean_engine
 from backend.app.utils.logger import logger
 
 
 class HotspotService:
     """
-    Service layer for microplastic accumulation hotspot detection and density analysis.
+    Service layer for fetching accumulation hotspots via the OceanEngine.
     """
 
     def get_accumulation_hotspots(self, region: Optional[str] = None) -> HotspotsResponse:
         """
-        Retrieves microplastic density concentration hotspots.
+        Retrieves plastic accumulation hotspot points and risk classifications via OceanEngine.
         """
-        logger.info(f"HotspotService: Calculating plastic concentration hotspots for region='{region}'")
+        logger.info(f"HotspotService: Retrieving accumulation hotspots for region='{region}' via OceanEngine")
 
-        # TODO: Execute spatial clustering (DBSCAN / Kernel Density Estimation) on particle outputs
-        # TODO: Cross-reference with marine protected areas and bathymetric boundaries
+        state = ocean_engine.get_ocean_state(region=region, forecast_day=0)
+        raw_hotspots = state.hotspots or []
 
-        target_region = region if region else PLACEHOLDER_HOTSPOTS["region"]
-        hotspots_list = [
-            HotspotSchema(**item) for item in PLACEHOLDER_HOTSPOTS["hotspots"]
+        hotspots = [
+            HotspotSchema(
+                id=h.get("id", "hotspot-001"),
+                latitude=h.get("latitude", 15.0),
+                longitude=h.get("longitude", 88.0),
+                density_particles_per_km2=h.get("density_particles_per_km2", 1500.0),
+                risk_level=h.get("risk_level", "High"),
+                description=h.get("description", "Estuarine outflow convergence zone")
+            )
+            for h in raw_hotspots
         ]
 
         return HotspotsResponse(
-            region=target_region,
-            count=len(hotspots_list),
-            hotspots=hotspots_list
+            region=state.region,
+            count=len(hotspots),
+            hotspots=hotspots
         )
 
 

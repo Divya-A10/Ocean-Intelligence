@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { 
-  Compass, Waves, Activity, AlertTriangle, FileText, Database, ShieldAlert,
+  Compass, Waves, Activity, AlertTriangle, Database, ShieldAlert,
   BarChart, Layers, HelpCircle, BookOpen, Settings, Anchor, Thermometer,
   ShieldCheck, ArrowUpRight, ChevronRight, Globe, Info, Sparkles, User, RefreshCw, Terminal, Clock, Play, Pause, Home, LayoutDashboard
 } from "lucide-react";
@@ -9,13 +9,12 @@ import { useSimulation } from "./hooks/useSimulation";
 import GlobePreview from "./components/GlobePreview";
 import PlasticSimulator from "./components/PlasticSimulator";
 import AICopilotWorkspace from "./components/AICopilotWorkspace";
-import ReportsGenerator from "./components/ReportsGenerator";
 import LandingPage from "./components/LandingPage";
 import { generateParticleMetadata } from "./utils/particleGenerator";
 import AnimatedNumber from "./components/AnimatedNumber";
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<"landing" | "dashboard" | "plastic" | "copilot" | "reports">("landing");
+  const [activeTab, setActiveTab] = useState<"landing" | "dashboard" | "plastic" | "copilot">("landing");
 
   // Use the central useSimulation hook for scientific data state management
   const {
@@ -227,8 +226,7 @@ export default function App() {
                   { id: "landing", label: "Overview", icon: Home },
                   { id: "dashboard", label: "Ocean Simulator", icon: Compass },
                   { id: "plastic", label: "Trajectory Analysis", icon: Waves },
-                  { id: "copilot", label: "Scientific Copilot", icon: Sparkles },
-                  { id: "reports", label: "Research Assistant", icon: FileText }
+                  { id: "copilot", label: "Scientific Copilot", icon: Sparkles }
                 ].map((tab) => {
                   const Icon = tab.icon;
                   const isSelected = activeTab === tab.id;
@@ -307,7 +305,6 @@ export default function App() {
                 setPlaybackSpeed={setPlaybackSpeed}
                 onRunSimulation={runSimulation}
                 onReset={reset}
-                onNavigateToReports={() => setActiveTab("reports")}
                 selectedParticleIndex={selectedParticleIndex}
                 onParticleProbe={setSelectedParticleIndex}
               />
@@ -547,12 +544,7 @@ export default function App() {
               selectedRegion={selectedRegion} 
               forecastDay={forecastDay}
               selectedParticleIndex={selectedParticleIndex}
-              onNavigateToReports={() => setActiveTab("reports")}
             />
-          )}
-
-          {activeTab === "reports" && (
-            <ReportsGenerator selectedRegion={selectedRegion} />
           )}
         </main>
       </div>

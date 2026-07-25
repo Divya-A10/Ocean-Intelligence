@@ -317,15 +317,30 @@ app.post(["/api/copilot", "/api/explain"], async (req, res) => {
     const ai = getGeminiClient();
     const systemPrompt = `You are the Ocean Intelligence Scientific Copilot, an elite research assistant specialized in oceanography, marine biology, Lagrangian particle transport simulation, and satellite remote sensing analysis.
 Provide high-fidelity, scientific, objective, and deeply professional analysis of microplastics transport, degradation, ecosystem impacts, and cleanup priorities.
-Cite scientific literature or data sources (e.g., Copernicus CMEMS, NOAA, ROMS, GBIF, OBIS) where applicable.
-Use clean markdown with headers, bullets, and tables. Keep a calm, inspiring, and authoritative tone. Do not invent unsupported conclusions.`;
+Base every statement strictly on the provided OceanState context. Do NOT fabricate numbers, coordinates, or measurements.
+Never claim certainty beyond the model confidence score.
+Format your response using Markdown with the following EXACT headers:
+## Scientific Copilot Analysis
+
+### Ocean Conditions
+
+### Interpretation
+
+### Transport Dynamics
+
+### Confidence
+
+### Suggested Investigation
+
+Keep the response concise (200-400 words).
+Always end with one actionable next investigation starting with 'Suggested Investigation: ...'.`;
 
     const promptText = `Analyze the environmental parameters and answer this research question:
 Question: ${prompt}
 Context Region: ${regionKey ? REGION_FORECASTS[regionKey]?.regionName || "Global Oceans" : "Global Oceans"}
 Current Metrics of region: ${JSON.stringify(REGION_FORECASTS[regionKey] || "No region specified")}
 
-Include oceanographic drivers, ecological impacts, model confidence, and structured citations.`;
+Include oceanographic drivers, transport dynamics, model confidence, and a suggested investigation.`;
 
     // Try Gemini model call with fallbacks across model aliases
     let generatedText: string | null = null;
@@ -352,6 +367,7 @@ Include oceanographic drivers, ecological impacts, model confidence, and structu
 
     if (generatedText) {
       return res.json({
+        answer: generatedText,
         text: generatedText,
         citations: [
           { title: "Copernicus Marine Service (CMEMS) Forecast", url: "https://marine.copernicus.eu" },
@@ -369,6 +385,7 @@ Include oceanographic drivers, ecological impacts, model confidence, and structu
       : MOCK_COPILOT_RESPONSES.default;
     
     return res.json({
+      answer: fallbackText + "\n\n*(Note: High AI API service demand detected. Content rendered directly from active CMEMS oceanographic simulation metrics.)*",
       text: fallbackText + "\n\n*(Note: High AI API service demand detected. Content rendered directly from active CMEMS oceanographic simulation metrics.)*",
       citations: [
         { title: "CMEMS Marine Pollution Review (2025)", url: "https://marine.copernicus.eu" },

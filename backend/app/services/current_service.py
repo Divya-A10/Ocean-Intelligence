@@ -1,31 +1,36 @@
 from typing import Optional
 from backend.app.schemas.current_schema import CurrentsResponse, CurrentVectorSchema
-from backend.app.data.placeholders import PLACEHOLDER_CURRENTS
+from backend.app.engine.ocean_engine import ocean_engine
 from backend.app.utils.logger import logger
 
 
 class CurrentService:
     """
-    Service layer for fetching ocean velocity vectors and hydrodynamic currents.
+    Service layer for fetching ocean velocity vectors and hydrodynamic currents via the Ocean Engine.
     """
 
     def get_ocean_currents(self, region: Optional[str] = None) -> CurrentsResponse:
         """
-        Fetches ocean current vector grid for a given region.
+        Fetches ocean current vector grid for a given region via OceanEngine.
         """
-        logger.info(f"CurrentService: Retrieving ocean velocity vectors for region='{region}'")
+        logger.info(f"CurrentService: Retrieving ocean velocity vectors for region='{region}' via OceanEngine")
 
-        # TODO: Connect to satellite altimetry and CMEMS surface velocity fields
-        # TODO: Compute tidal current constituents and wind drag coefficients
-
-        target_region = region if region else PLACEHOLDER_CURRENTS["region"]
+        state = ocean_engine.get_ocean_state(region=region, forecast_day=0)
         vectors = [
-            CurrentVectorSchema(**vec) for vec in PLACEHOLDER_CURRENTS["vectors"]
+            CurrentVectorSchema(
+                latitude=v.latitude,
+                longitude=v.longitude,
+                u_component=v.u_component,
+                v_component=v.v_component,
+                velocity_knots=v.velocity_knots,
+                direction=v.direction
+            )
+            for v in state.current_vectors
         ]
 
         return CurrentsResponse(
-            region=target_region,
-            timestamp=PLACEHOLDER_CURRENTS["timestamp"],
+            region=state.region,
+            timestamp=state.forecast_time,
             vectors=vectors
         )
 

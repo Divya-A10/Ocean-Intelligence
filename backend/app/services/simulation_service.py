@@ -1,36 +1,35 @@
-from typing import Optional, Dict, Any
+from typing import Optional
 from backend.app.schemas.simulation_schema import SimulationResponse, RiskMetricsSchema
-from backend.app.data.placeholders import PLACEHOLDER_SIMULATION
+from backend.app.engine.ocean_engine import ocean_engine
 from backend.app.utils.logger import logger
 
 
 class SimulationService:
     """
-    Service layer handling ocean plastic Lagrangian transport simulation queries.
+    Service layer handling ocean plastic Lagrangian transport simulation queries via OceanEngine.
     """
 
     def get_simulation_forecast(self, region: Optional[str] = None, day: Optional[int] = None) -> SimulationResponse:
         """
-        Retrieves ocean particle drift forecast data for a specified region and day.
+        Retrieves ocean particle drift forecast data for a specified region and day via OceanEngine.
         """
-        logger.info(f"SimulationService: Fetching simulation forecast for region='{region}', day={day}")
+        forecast_day = day if day is not None else 0
+        logger.info(f"SimulationService: Fetching simulation forecast for region='{region}', day={forecast_day} via OceanEngine")
 
-        # TODO: Integrate Copernicus Marine Environment Monitoring Service (CMEMS) API
-        # TODO: Integrate OceanParcels Lagrangian particle tracking framework
-        # TODO: Fetch real-time surface velocity vectors from HYCOM data server
+        state = ocean_engine.get_ocean_state(region=region, forecast_day=forecast_day)
 
-        # Returning standardized placeholder simulation response
-        region_name = region if region else PLACEHOLDER_SIMULATION["region"]
-        
+        currents = [v.model_dump() for v in state.current_vectors]
+        hotspots = state.hotspots or []
+
         return SimulationResponse(
-            forecast_time=PLACEHOLDER_SIMULATION["forecast_time"],
-            region=region_name,
-            particles=PLACEHOLDER_SIMULATION["particles"],
-            currents=PLACEHOLDER_SIMULATION["currents"],
-            hotspots=PLACEHOLDER_SIMULATION["hotspots"],
+            forecast_time=state.forecast_time,
+            region=state.region,
+            particles=[],
+            currents=currents,
+            hotspots=hotspots,
             metrics=RiskMetricsSchema(
-                risk=PLACEHOLDER_SIMULATION["metrics"]["risk"],
-                confidence=PLACEHOLDER_SIMULATION["metrics"]["confidence"]
+                risk="High" if state.confidence > 0.8 else "Moderate",
+                confidence=round(state.confidence * 100, 1)
             )
         )
 

@@ -151,11 +151,11 @@ export default function LandingPage({
             What can you explore?
           </h2>
           <p className="text-xs sm:text-sm text-slate-500">
-            Four core modules designed for effortless environmental discovery.
+            Three core modules designed for effortless environmental discovery.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           
           {/* Card 1 */}
           <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-200 space-y-3 group">
@@ -187,17 +187,6 @@ export default function LandingPage({
             <h3 className="text-base font-bold text-slate-900">AI Insights</h3>
             <p className="text-xs text-slate-600 leading-relaxed">
               Ask questions and receive clear scientific explanations.
-            </p>
-          </div>
-
-          {/* Card 4 */}
-          <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-200 space-y-3 group">
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100 group-hover:scale-105 transition-transform">
-              <FileText className="w-5 h-5" />
-            </div>
-            <h3 className="text-base font-bold text-slate-900">Research Reports</h3>
-            <p className="text-xs text-slate-600 leading-relaxed">
-              Generate summaries and export findings.
             </p>
           </div>
 
