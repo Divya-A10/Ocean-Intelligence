@@ -859,14 +859,13 @@ export default function GlobePreview({
 
     // 7. Animation Loop
     let animationFrameId = 0;
-    const timer = new THREE.Timer();
+    let clock = new THREE.Clock();
 
-    const animate = (timestamp?: number) => {
+    const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
 
-      timer.update(timestamp);
-      const delta = timer.getDelta();
-      const time = timer.getElapsed();
+      const delta = clock.getDelta();
+      const time = clock.getElapsedTime();
 
       // Smooth camera zoom lerp
       camera.position.z += (zoomDistanceRef.current - camera.position.z) * 0.1;
@@ -1037,7 +1036,6 @@ export default function GlobePreview({
     // Cleanups
     return () => {
       cancelAnimationFrame(animationFrameId);
-      timer.dispose();
       window.removeEventListener("resize", handleResize);
       dom.removeEventListener("mousedown", handleMouseDown);
       dom.removeEventListener("mousemove", handleMouseMove);
