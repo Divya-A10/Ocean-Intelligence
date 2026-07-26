@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { 
   Compass, Waves, Activity, AlertTriangle, Database, ShieldAlert,
   BarChart, Layers, HelpCircle, BookOpen, Settings, Anchor, Thermometer,
-  ShieldCheck, ArrowUpRight, ChevronRight, Globe, Info, Sparkles, User, RefreshCw, Terminal, Clock, Play, Pause, Home, LayoutDashboard
+  ShieldCheck, ArrowUpRight, ChevronRight, Globe, Info, Sparkles, User, RefreshCw, Terminal, Clock, Play, Pause, Home, LayoutDashboard,
+  FileSpreadsheet
 } from "lucide-react";
 import { RegionKey } from "./types/simulation";
 import { useSimulation } from "./hooks/useSimulation";
@@ -10,11 +11,13 @@ import GlobePreview from "./components/GlobePreview";
 import PlasticSimulator from "./components/PlasticSimulator";
 import AICopilotWorkspace from "./components/AICopilotWorkspace";
 import LandingPage from "./components/LandingPage";
+import GoogleSheetsExportModal from "./components/GoogleSheetsExportModal";
 import { generateParticleMetadata } from "./utils/particleGenerator";
 import AnimatedNumber from "./components/AnimatedNumber";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<"landing" | "dashboard" | "plastic" | "copilot">("landing");
+  const [isSheetsModalOpen, setIsSheetsModalOpen] = useState(false);
 
   // Use the central useSimulation hook for scientific data state management
   const {
@@ -186,6 +189,16 @@ export default function App() {
 
         {/* Global navigation actions */}
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => setIsSheetsModalOpen(true)}
+            className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 transition flex items-center gap-1.5 cursor-pointer shadow-xs"
+            title="Export live ocean dataset to Google Sheets"
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600 stroke-[2.5]" />
+            <span className="hidden sm:inline">Export to Sheets</span>
+            <span className="sm:hidden">Sheets</span>
+          </button>
+
           <button
             onClick={() => setActiveTab("landing")}
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
@@ -536,6 +549,7 @@ export default function App() {
               setPlaybackSpeed={setPlaybackSpeed}
               onRunSimulation={runSimulation}
               onReset={reset}
+              onOpenSheetsExport={() => setIsSheetsModalOpen(true)}
             />
           )}
 
@@ -548,6 +562,36 @@ export default function App() {
           )}
         </main>
       </div>
+
+      {/* Google Sheets Export Modal */}
+      <GoogleSheetsExportModal
+        isOpen={isSheetsModalOpen}
+        onClose={() => setIsSheetsModalOpen(false)}
+        oceanStatePayload={{
+          region: selectedRegion === "bay-of-bengal" ? "Bay of Bengal" : selectedRegion === "singapore-strait" ? "Singapore Strait" : selectedRegion === "north-pacific-gyre" ? "North Pacific Gyre" : "Mediterranean Sea",
+          forecastTime: `Forecast Day ${forecastDay}`,
+          source: "CMEMS Copernicus Marine Service",
+          confidence: 0.92,
+          temperature: 28.4,
+          salinity: 34.2,
+          currentVectors: (forecastData?.currentVectors || []).map(v => ({
+            latitude: v.lat,
+            longitude: v.lng,
+            u_component: v.u,
+            v_component: v.v,
+            velocity_knots: Math.round(Math.sqrt(v.u * v.u + v.v * v.v) * 1.94384 * 10) / 10,
+            direction: "North-East"
+          })),
+          hotspots: (forecastData?.hotspots || []).map(h => ({
+            id: h.id,
+            latitude: h.lat,
+            longitude: h.lng,
+            density_particles_per_km2: h.density,
+            risk_level: h.risk,
+            description: h.description
+          }))
+        }}
+      />
     </div>
   );
 }

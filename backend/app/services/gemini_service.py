@@ -2,9 +2,36 @@ import os
 import time
 from typing import List, Dict, Any, Optional
 import httpx
+from dotenv import load_dotenv
+
+# Ensure environment variables are loaded
+load_dotenv()
+
+# Try importing official Google Gen AI SDK
+try:
+    from google import genai
+    from google.genai import types
+    HAS_GENAI_SDK = True
+except ImportError:
+    HAS_GENAI_SDK = False
+
 from backend.app.schemas.explain_schema import ExplainRequest, ExplainResponse, Citation
 from backend.app.engine.ocean_engine import ocean_engine
 from backend.app.utils.logger import logger
+
+
+# Environment configuration
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+
+# Initialize client ONCE at module load time
+genai_client = None
+if HAS_GENAI_SDK and GEMINI_API_KEY and GEMINI_API_KEY not in ["MY_GEMINI_API_KEY", "MOCK_KEY_FOR_DEV", "YOUR_GEMINI_API_KEY"]:
+    try:
+        genai_client = genai.Client(api_key=GEMINI_API_KEY)
+        logger.info("GeminiService: Google Gen AI Client initialized successfully.")
+    except Exception:
+        logger.exception("GeminiService: Failed to initialize Google Gen AI Client")
 
 
 class GeminiService:
@@ -14,12 +41,17 @@ class GeminiService:
     """
 
     def __init__(self):
-        self.api_key = os.getenv("GEMINI_API_KEY", "")
-        self.candidate_models = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]
         self.http_client = httpx.Client(timeout=15.0)
+        self.candidate_models = [GEMINI_MODEL, "gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]
+
+    def _get_api_key(self) -> str:
+        return os.getenv("GEMINI_API_KEY", GEMINI_API_KEY)
+
+    def _get_model(self) -> str:
+        return os.getenv("GEMINI_MODEL", GEMINI_MODEL)
 
     def _is_api_key_valid(self) -> bool:
-        key = os.getenv("GEMINI_API_KEY", self.api_key)
+        key = self._get_api_key()
         if not key or key in ["MY_GEMINI_API_KEY", "MOCK_KEY_FOR_DEV", "YOUR_GEMINI_API_KEY"]:
             return False
         return True
@@ -32,11 +64,13 @@ class GeminiService:
         forecast_day = request.get_forecast_day()
         query = request.get_query()
 
-        logger.info(f"GeminiService: Generating explanation for region='{region_name}', forecast_day={forecast_day}")
-        logger.info(f"GeminiService: User Query: '{query[:60]}...'")
+        logger.info(f"GeminiService: Incoming request received for region='{region_name}', forecast_day={forecast_day}")
+        logger.info(f"GeminiService: Selected Region: {region_name}, Forecast Day: {forecast_day}")
+        logger.info(f"GeminiService: User Query: '{query}'")
 
         # 1. Grounding: Retrieve live OceanState from Ocean Intelligence Engine
         state = ocean_engine.get_ocean_state(region=region_name, forecast_day=forecast_day)
+        logger.info(f"GeminiService: OceanState successfully loaded for region='{state.region}'.")
 
         # Extract parameters for prompt construction
         avg_speed = 0.0
@@ -54,52 +88,69 @@ class GeminiService:
 
         # 2. Build Structured Scientific Prompt
         prompt_text = (
-            f"Current Ocean State Context:\n"
+            f"You are Ocean Intelligence's Scientific Copilot.\n"
+            f"You are assisting marine researchers studying marine microplastic transport.\n"
+            f"You must ONLY use the supplied OceanState.\n"
+            f"Do not invent measurements. Do not fabricate scientific facts. Do not mention values that are not provided.\n"
+            f"If insufficient information exists, explicitly state that additional observations are required.\n\n"
+            f"Current Ocean State:\n"
             f"- Region: {state.region}\n"
             f"- Forecast Day: Day {forecast_day}\n"
             f"- Data Source: {state.source}\n"
-            f"- Surface Current Speed: {avg_speed} knots\n"
+            f"- Surface Velocity: {avg_speed} knots\n"
             f"- Current Direction: {direction}\n"
             f"- Sea Surface Temperature: {state.temperature}°C\n"
             f"- Salinity: {state.salinity} PSU\n"
             f"- Model Confidence: {confidence_pct}%\n"
-            f"- Particle Hotspots: {hotspot_summary}\n\n"
-            f"User Research Question:\n"
+            f"- Hotspot Density: {hotspot_summary}\n\n"
+            f"User Question:\n"
             f"\"{query}\"\n\n"
-            f"Provide a scientifically rigorous analysis based strictly on the above OceanState."
+            f"Return your response in Markdown using EXACTLY these section headers:\n\n"
+            f"## Scientific Copilot Analysis\n\n"
+            f"### Ocean Conditions\n\n"
+            f"### Interpretation\n\n"
+            f"### Transport Dynamics\n\n"
+            f"### Confidence\n\n"
+            f"### Suggested Investigation\n\n"
+            f"The Suggested Investigation should always end with one actionable recommendation for researchers starting with 'Suggested Investigation: ...'."
         )
 
         system_instruction = (
-            "You are an experienced, senior marine scientist and numerical oceanographer analyzing active data from the Ocean Intelligence Engine.\n"
-            "CRITICAL CONSTRAINTS:\n"
-            "1. Base every statement strictly on the provided OceanState data. Do NOT fabricate numbers, coordinates, or measurements.\n"
-            "2. Never claim certainty beyond the provided model confidence score.\n"
-            "3. Never mention parameters that do not exist in the OceanState context.\n"
-            "4. If the user query is unrelated to ocean science or current analysis, politely redirect them to the current ocean dataset.\n"
-            "5. Structure your response using Markdown with the following EXACT headers:\n\n"
-            "## Scientific Copilot Analysis\n\n"
-            "### Ocean Conditions\n"
-            "[Brief overview of region, timestep, currents, temperature, and source]\n\n"
-            "### Interpretation\n"
-            "[Oceanographic interpretation explaining hydrodynamic mechanisms and debris retention]\n\n"
-            "### Transport Dynamics\n"
-            "[Lagrangian drift, current velocity vector impact, and convergence pathways]\n\n"
-            "### Confidence\n"
-            "[Data confidence assessment based on model confidence score]\n\n"
-            "### Suggested Investigation\n"
-            "[MUST end with one actionable next investigation starting with 'Suggested Investigation: ...']\n\n"
-            "Keep the response concise (200-400 words)."
+            "You are Ocean Intelligence's Scientific Copilot. Base every statement strictly on the provided OceanState. "
+            "Never invent measurements or fabricate facts. Always end with one actionable recommendation under ### Suggested Investigation."
         )
 
-        logger.info(f"GeminiService: Prompt created successfully for region='{state.region}'. Sending Gemini request...")
+        logger.info(f"GeminiService: Prompt successfully built for region='{state.region}'.")
 
         start_time = time.time()
         generated_text: Optional[str] = None
-        api_key = os.getenv("GEMINI_API_KEY", self.api_key)
+        current_api_key = self._get_api_key()
+        current_model = self._get_model()
 
-        if self._is_api_key_valid():
+        # Method A: Use initialized genai.Client if available
+        if genai_client and self._is_api_key_valid():
+            try:
+                logger.info(f"GeminiService: Gemini request started using Gen AI SDK (Model: {current_model})...")
+                response = genai_client.models.generate_content(
+                    model=current_model,
+                    contents=prompt_text,
+                    config=types.GenerateContentConfig(
+                        system_instruction=system_instruction,
+                        temperature=0.2,
+                        max_output_tokens=800
+                    )
+                )
+                if response and response.text:
+                    generated_text = response.text
+                    elapsed = round((time.time() - start_time) * 1000, 2)
+                    logger.info(f"GeminiService: Gemini response received successfully via SDK in {elapsed}ms.")
+            except Exception:
+                logger.exception(f"GeminiService: SDK generation with {current_model} encountered an error")
+
+        # Method B: HTTP REST endpoint fallback
+        if not generated_text and self._is_api_key_valid():
             for model_name in self.candidate_models:
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={current_api_key}"
                 payload = {
                     "contents": [{"parts": [{"text": prompt_text}]}],
                     "systemInstruction": {"parts": [{"text": system_instruction}]},
@@ -109,6 +160,7 @@ class GeminiService:
                     }
                 }
                 try:
+                    logger.info(f"GeminiService: Gemini REST request started (Model: {model_name})...")
                     res = self.http_client.post(url, json=payload, timeout=12.0)
                     if res.status_code == 200:
                         data = res.json()
@@ -118,18 +170,20 @@ class GeminiService:
                             if parts and "text" in parts[0]:
                                 generated_text = parts[0]["text"]
                                 elapsed = round((time.time() - start_time) * 1000, 2)
-                                logger.info(f"GeminiService: Successfully received response from Gemini ({model_name}) in {elapsed}ms")
+                                logger.info(f"GeminiService: Gemini response received successfully via REST ({model_name}) in {elapsed}ms.")
                                 break
                     else:
-                        logger.warning(f"GeminiService: Model {model_name} returned HTTP {res.status_code}. Trying fallback model...")
-                except Exception as req_err:
-                    logger.warning(f"GeminiService: Request to {model_name} failed: {req_err}. Trying fallback model...")
+                        logger.warning(f"GeminiService: REST model {model_name} returned HTTP {res.status_code}.")
+                except Exception:
+                    logger.exception(f"GeminiService: REST request to {model_name} encountered an exception")
 
-        # 3. Fallback Generation if Gemini API fails or key is unconfigured
+        # Method C: Keep existing fallback implementation if Gemini fails
         if not generated_text:
             elapsed = round((time.time() - start_time) * 1000, 2)
-            logger.warning(f"GeminiService: Gemini API unavailable or unconfigured ({elapsed}ms). Generating grounded fallback from OceanState.")
+            logger.warning(f"GeminiService: Gemini API unavailable or unconfigured ({elapsed}ms). Returning deterministic grounded fallback from OceanState.")
             generated_text = self._build_fallback_explanation(state, forecast_day, avg_speed, direction, confidence_pct)
+
+        logger.info(f"GeminiService: Final response returned for region='{state.region}'.")
 
         citations = [
             Citation(title="CMEMS Copernicus Marine Physics Forecast", url="https://marine.copernicus.eu"),

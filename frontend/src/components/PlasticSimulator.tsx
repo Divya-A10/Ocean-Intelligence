@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { 
   BarChart, ArrowRight, ShieldAlert, Waves, Anchor, Compass, Info,
   AlertTriangle, Flame, ShieldCheck, HelpCircle, ArrowUpRight, DollarSign, Calendar,
-  Play, Pause, FastForward, RotateCcw, PlayCircle
+  Play, Pause, FastForward, RotateCcw, PlayCircle, FileSpreadsheet
 } from "lucide-react";
 import { SimulationResponse as ForecastData } from "../types/simulation";
 import AnimatedNumber from "./AnimatedNumber";
@@ -18,6 +18,7 @@ interface PlasticSimulatorProps {
   setPlaybackSpeed: (speed: 0.5 | 1 | 2) => void;
   onRunSimulation?: () => void;
   onReset?: () => void;
+  onOpenSheetsExport?: () => void;
 }
 
 export default function PlasticSimulator({ 
@@ -30,7 +31,8 @@ export default function PlasticSimulator({
   playbackSpeed,
   setPlaybackSpeed,
   onRunSimulation,
-  onReset
+  onReset,
+  onOpenSheetsExport
 }: PlasticSimulatorProps) {
   const [activeModelTab, setActiveModelTab] = useState<"currents" | "pathways" | "degradation" | "biodiversity">("currents");
 
@@ -73,11 +75,21 @@ export default function PlasticSimulator({
                 Projection Horizon Controls
               </span>
               <div className="flex items-center gap-2">
+                {onOpenSheetsExport && (
+                  <button
+                    onClick={onOpenSheetsExport}
+                    className="px-2.5 py-1 rounded bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-[10px] font-bold font-mono transition flex items-center gap-1 shadow-xs cursor-pointer"
+                    title="Export simulation data to Google Sheets"
+                  >
+                    <FileSpreadsheet className="w-3 h-3 text-emerald-600" />
+                    Export to Sheets
+                  </button>
+                )}
                 {onRunSimulation && (
                   <button
                     onClick={onRunSimulation}
                     disabled={loading}
-                    className="px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-[10px] font-bold font-mono transition flex items-center gap-1 shadow-sm"
+                    className="px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-[10px] font-bold font-mono transition flex items-center gap-1 shadow-sm cursor-pointer"
                   >
                     <PlayCircle className="w-3 h-3 fill-current" />
                     Run Simulation
