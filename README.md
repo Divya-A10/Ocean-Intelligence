@@ -118,6 +118,9 @@ Scientific Copilot (Gemini)
 Interactive Dashboard
 ```
 
+[![Architecture diagram of divya-a10/ocean-intelligence](https://gitdiagram.com/divya-a10/ocean-intelligence/diagram.png)](https://gitdiagram.com/divya-a10/ocean-intelligence?utm_source=readme&utm_medium=picture)
+
+
 ## Platform Components
 
 ### 1. Ocean Intelligence Engine
