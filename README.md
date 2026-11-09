@@ -118,7 +118,7 @@ Scientific Copilot (Gemini)
 Interactive Dashboard
 ```
 
-[![Architecture diagram of divya-a10/ocean-intelligence](https://gitdiagram.com/divya-a10/ocean-intelligence/diagram.png)](https://gitdiagram.com/divya-a10/ocean-intelligence?utm_source=readme&utm_medium=picture)
+<img width="8019" height="8507" alt="diagram (2)" src="https://github.com/user-attachments/assets/8572a3d5-47a2-4cfa-8b27-3c9e4ddb23fd" />
 
 
 ## Platform Components
